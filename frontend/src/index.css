@@ -1,0 +1,91 @@
+/* Solace design tokens. Dark is the main theme; light is applied with [data-theme="light"]. */
+:root {
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
+    "Times New Roman", serif;
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --bg: #0b110e; /* deep forest green-black */
+  --surface: #101813;
+  --surface-2: #16201a;
+  --footer-bg: #08100b; /* footer + closing section stay dark in both themes */
+  --border: rgba(226, 236, 229, 0.12);
+  --border-strong: rgba(226, 236, 229, 0.22);
+  --text: #ece8df; /* warm white */
+  --muted: #98a49c;
+  --accent: #9db8a4; /* muted sage */
+  --accent-hover: #adc5b3;
+  --accent-contrast: #0a0e0c; /* text on top of --accent */
+  --accent-text: #b4cdba; /* sage used for small text and links */
+  --accent-soft: rgba(157, 184, 164, 0.12);
+  --accent-border: rgba(157, 184, 164, 0.3);
+  --danger-text: #eba99d;
+  --danger-bg: rgba(235, 120, 100, 0.1);
+  --danger-border: rgba(235, 120, 100, 0.35);
+  --backdrop: rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --footer-bg: #0f1c15;
+  --bg: #f7f4ed; /* warm paper */
+  --surface: #fdfbf6;
+  --surface-2: #eeeadf;
+  --border: rgba(28, 38, 34, 0.13);
+  --border-strong: rgba(28, 38, 34, 0.25);
+  --text: #1c2622;
+  --muted: #58665e;
+  --accent: #3d6650;
+  --accent-hover: #335742;
+  --accent-contrast: #ffffff;
+  --accent-text: #2f5640;
+  --accent-soft: rgba(61, 102, 80, 0.09);
+  --accent-border: rgba(61, 102, 80, 0.3);
+  --danger-text: #9b3a2a;
+  --danger-bg: rgba(155, 58, 42, 0.07);
+  --danger-border: rgba(155, 58, 42, 0.3);
+  --backdrop: rgba(28, 38, 34, 0.35);
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

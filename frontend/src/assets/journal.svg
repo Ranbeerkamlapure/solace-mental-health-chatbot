@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+<radialGradient id="glow" cx="0.72" cy="0.22" r="0.55"><stop offset="0" stop-color="#e6b872" stop-opacity="0.45"/><stop offset="1" stop-color="#e6b872" stop-opacity="0"/></radialGradient>
+<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2b23"/><stop offset="1" stop-color="#13201a"/></linearGradient>
+</defs>
+<rect width="800" height="1000" fill="url(#wall)"/>
+<rect width="800" height="1000" fill="url(#glow)"/>
+<!-- window light -->
+<rect x="470" y="90" width="230" height="300" rx="6" fill="#d9b27a" opacity="0.16"/>
+<path d="M585 90v300M470 240h230" stroke="#0f1813" stroke-width="6" opacity="0.7"/>
+<!-- plant -->
+<path d="M120 620c-10-120 10-230 60-330M120 620c30-90 70-150 130-200M120 620c-40-70-90-110-150-130" stroke="#5f7f6a" stroke-width="5" fill="none" stroke-linecap="round"/>
+<g fill="#6e8f78"><path d="M180 290c-40 10-60 50-52 90 40-10 62-48 52-90z"/><path d="M250 420c-10-40-50-60-90-52 10 40 48 62 90 52z"/><path d="M-30 490c40-10 76 0 100 34-40 10-76 0-100-34z"/><path d="M150 360c30-30 70-30 96-8-26 30-66 34-96 8z" opacity="0.8"/></g>
+<g transform="translate(0,-190)"><!-- desk -->
+<rect x="0" y="690" width="800" height="310" fill="#2a1f17"/>
+<rect x="0" y="690" width="800" height="6" fill="#3a2c21"/>
+<!-- open journal -->
+<path d="M150 760l250-40 250 40v90l-250-30-250 30z" fill="#e9e1cf"/>
+<path d="M400 720v100" stroke="#bdb39b" stroke-width="3"/>
+<g stroke="#a89f88" stroke-width="2" opacity="0.8" stroke-linecap="round"><path d="M200 770l170-26M205 790l165-24M210 810l160-22M430 744l170 26M430 766l165 24"/></g>
+<!-- pen -->
+<path d="M470 800l130-30" stroke="#0f1813" stroke-width="7" stroke-linecap="round"/>
+<!-- cup of tea -->
+<ellipse cx="640" cy="842" rx="70" ry="14" fill="#1c140f" opacity="0.6"/>
+<path d="M575 770h130v30c0 36-28 60-65 60s-65-24-65-60z" fill="#d8d2c2"/>
+<ellipse cx="640" cy="770" rx="65" ry="12" fill="#8a5a33"/>
+<path d="M705 782c28 0 28 40 0 40" stroke="#d8d2c2" stroke-width="8" fill="none"/>
+<path d="M625 740c-10-20 10-30 0-50M655 740c-10-20 10-30 0-50" stroke="#c7d3c9" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round"/>
+</g>
+<rect x="0" y="800" width="800" height="200" fill="#2a1f17"/>
+</svg>

@@ -1,0 +1,28 @@
+
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node and build output
+node_modules/
+dist/
+.vercel/
+
+# Local logs and editor files
+*.log
+.DS_Store
+.vscode/
+
+
+# Backup archives
+*.zip
