@@ -2,7 +2,7 @@
 
 **A calm, accessible web application for supportive conversations and reflection.**
 
-Solace is a full-stack student project designed to provide a simple space where users can express their feelings and receive supportive, rule-based chatbot responses. It combines a responsive React interface with a FastAPI backend and MongoDB-backed user authentication.
+Solace is a full-stack student project designed to provide a simple space where users can express their feelings and receive supportive replies. A language model on Groq writes those replies. A fixed crisis reply is used for selected high-risk phrases, and a written keyword reply is used only if Groq cannot answer. The app combines a responsive React interface with a FastAPI backend and MongoDB for accounts and saved chats.
 
 > **Important:** Solace is an educational support project, not a medical or mental-health professional service. It does not diagnose conditions, prescribe treatment, or replace professional care or emergency services.
 
@@ -19,11 +19,13 @@ The backend is hosted on Render's free tier and may take a little time to respon
 - **User authentication:** Account registration and login.
 - **Secure password handling:** Password hashing using Argon2.
 - **Token-based authentication:** JWT-protected backend endpoints.
-- **Supportive chatbot:** Locally implemented, rule-based responses without a paid external AI API.
-- **Safety checks:** Keyword-based checks for selected high-risk messages.
+- **Supportive chatbot:** Replies are written by Groq's free API and follow the message and recent turns of the chat.
+- **Safety checks:** Selected crisis phrases receive a fixed helpline reply and are not sent to Groq.
+- **Saved conversations:** Chats are stored for the signed-in user and can be deleted from the sidebar.
+- **Send limits:** One message every 2 seconds, and 100 messages per account per day.
 - **Responsive interface:** A calm visual design for desktop and mobile screens.
 - **Theme switching:** Dark and light appearance options.
-- **Profile page:** View account information.
+- **Profile page:** View account information and change the display name.
 - **Informational pages:** About, Privacy, and Terms.
 - **Cloud deployment:** Frontend and backend deployed separately.
 
@@ -36,6 +38,7 @@ The backend is hosted on Render's free tier and may take a little time to respon
 | Database         | MongoDB Atlas                |
 | Authentication   | JWT                          |
 | Password hashing | Argon2                       |
+| Chat replies     | Groq API (`openai/gpt-oss-120b`) |
 | Frontend hosting | Vercel                       |
 | Backend hosting  | Render                       |
 | Source control   | Git and GitHub               |
@@ -54,18 +57,21 @@ FastAPI Backend
       |
       +--> Authentication and JWT verification
       |
-      +--> Keyword-based safety checks
+      +--> Crisis phrase check (fixed helpline reply)
       |
-      +--> Rule-based chatbot responses
+      +--> Groq, for other replies
+      |
+      +--> Written keyword reply, only if Groq fails
       |
       +--> MongoDB Atlas
              |
-             +--> User account data
+             +--> User accounts
+             +--> Saved conversations
 ```
 
-The frontend communicates with the backend through HTTP requests. The backend handles authentication, validates protected requests, applies the chatbot's safety checks, and returns responses.
+The frontend communicates with the backend through HTTP requests. The backend handles authentication, checks for crisis phrases, asks Groq for a reply, and stores the conversation for that user.
 
-MongoDB Atlas stores user account data. Chat conversations currently exist only in frontend application state and are not persistently saved to the database.
+MongoDB Atlas stores account data and saved chats. A message and a few earlier turns are also sent to Groq so the reply can follow the conversation. Groq's free tier is rate-limited.
 
 ## 📁 Project Structure
 
@@ -75,17 +81,22 @@ mental-health-chatbot/
 │   ├── core/
 │   │   ├── config.py
 │   │   ├── deps.py
+│   │   ├── rate_limit.py
 │   │   └── security.py
 │   ├── models/
 │   │   └── user.py
 │   ├── routes/
-│   │   └── auth.py
+│   │   ├── auth.py
+│   │   └── conversations.py
 │   ├── schemas/
 │   │   ├── auth.py
+│   │   ├── chat.py
 │   │   └── user.py
 │   ├── services/
 │   │   ├── auth_service.py
-│   │   └── chat_service.py
+│   │   ├── chat_service.py
+│   │   └── conversation_service.py
+│   ├── tests/
 │   ├── database.py
 │   ├── main.py
 │   ├── requirements.txt
