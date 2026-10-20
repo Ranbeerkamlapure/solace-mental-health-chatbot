@@ -132,6 +132,8 @@ JWT_SECRET=your_long_random_secret
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 Use your own database connection string and a strong random JWT secret. Never commit real credentials to GitHub.
@@ -209,6 +211,8 @@ For local development, ensure the backend's `CORS_ORIGINS` includes the frontend
 | `JWT_ALGORITHM`               | JWT signing algorithm                              |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration duration                          |
 | `CORS_ORIGINS`                | Comma-separated list of permitted frontend origins |
+| `GROQ_API_KEY`                | Free Groq API key used to write chat replies       |
+| `GROQ_MODEL`                  | Groq model id, default `openai/gpt-oss-120b`       |
 | `VITE_API_URL`                | Backend URL used by the Vite frontend              |
 
 Variables beginning with `VITE_` are exposed to frontend code. Never place database credentials, JWT secrets, or other private values in frontend environment variables.
@@ -218,25 +222,24 @@ Variables beginning with `VITE_` are exposed to frontend code. Never place datab
 - Passwords are hashed before storage.
 - Protected endpoints require valid authentication.
 - Environment files and credentials must remain outside the public repository.
-- Conversations are not currently persisted across page refreshes.
+- Conversations are stored for the signed-in user and can be deleted from the chat sidebar.
+- A message and a few earlier turns are sent to Groq to write the reply.
 - Users should avoid entering highly sensitive personal information.
 
-The chatbot's keyword-based safety checks are limited and cannot guarantee detection of every crisis situation. If you are in immediate danger, contact local emergency services or a trusted person.
+Crisis checks look for selected phrases and cannot guarantee detection of every crisis situation. If you are in immediate danger, contact local emergency services or a trusted person.
 
 ## ⚠️ Current Limitations
 
-- Chatbot replies use predefined, rule-based logic rather than a large language model.
-- Chat history is not persisted across refreshes or sessions.
-- The profile page does not currently support editing account information.
-- Safety checks are based on selected keywords and are not a clinical assessment.
+- Replies come from Groq when `GROQ_API_KEY` is set. If that call fails, a keyword reply is used instead.
+- Crisis handling is a fixed reply for selected phrases, not a clinical assessment.
+- Chat sending is limited to one message every 2 seconds and 100 messages per user per day, in the running server process.
+- The profile page can change the display name. Email cannot be changed.
 - The application is an educational project and has not been presented as a certified clinical or emergency service.
 
 ## 🛣️ Potential Improvements
 
-- Persist conversations with appropriate privacy controls.
-- Add automated backend and frontend tests.
-- Improve rate limiting and abuse protection.
-- Add account profile editing.
+- Add automated frontend tests.
+- Keep the send limit in a shared store so it survives more than one server process.
 - Expand safety handling and test edge cases.
 - Improve accessibility and loading/error states.
 

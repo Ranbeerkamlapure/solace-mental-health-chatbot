@@ -4,7 +4,7 @@ import { API_URL } from "../config.js";
 const SUGGESTIONS = ["I'm feeling stressed", "I'm feeling lonely", "I need some motivation"];
 
 // conversations = [{ id, title, messages: [{ role: "user" | "ai" | "error", content }] }]
-// They live in React state only (no database), so they disappear on refresh or sign out.
+// Saved chats come from the server. A message with role "error" stays in this tab only.
 function ChatPage({
   token,
   conversations,
@@ -19,7 +19,39 @@ function ChatPage({
   const [pendingId, setPendingId] = useState(null); // which conversation is waiting for a reply
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false); // only used on small screens
+  const [chatsLoading, setChatsLoading] = useState(true);
   const bottomRef = useRef(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadChats() {
+      try {
+        const response = await fetch(`${API_URL}/conversations`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (ignore) return;
+        if (response.status === 401) {
+          onSessionExpired();
+          return;
+        }
+        if (response.ok) {
+          const data = await response.json();
+          setConversations(data);
+          setActiveId((current) => current ?? data[0]?.id ?? null);
+        }
+      } catch {
+        // The sidebar keeps whatever is already on screen.
+      } finally {
+        if (!ignore) setChatsLoading(false);
+      }
+    }
+
+    loadChats();
+    return () => {
+      ignore = true;
+    };
+  }, [token, setConversations, setActiveId]);
 
   const active = conversations.find((c) => c.id === activeId);
   const messages = active ? active.messages : [];
@@ -54,15 +86,41 @@ function ChatPage({
     );
   }
 
+  async function deleteConversation(id) {
+    if (String(id).startsWith("local-")) {
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (activeId === id) setActiveId(null);
+      return;
+    }
+    if (!window.confirm("Delete this conversation? This cannot be undone.")) return;
+
+    try {
+      const response = await fetch(`${API_URL}/conversations/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      if (response.ok) {
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (activeId === id) setActiveId(null);
+      }
+    } catch {
+      // Leave the conversation in the list if the server could not be reached.
+    }
+  }
+
   async function sendMessage(text) {
     const userText = text.trim();
     if (!userText || loading) return;
 
-    // Which conversation is this message for? Create one if needed.
+    const creating = activeId === null || String(activeId).startsWith("local-");
     let id = activeId;
     if (id === null) {
-      id = Date.now();
-      const title = userText.length > 40 ? userText.slice(0, 40) + "…" : userText;
+      id = `local-${Date.now()}`;
+      const title = userText.length > 40 ? `${userText.slice(0, 40)}…` : userText;
       setConversations((prev) => [{ id, title, messages: [] }, ...prev]);
       setActiveId(id);
     }
@@ -72,8 +130,12 @@ function ChatPage({
     setLoading(true);
     setPendingId(id);
 
+    const url = creating
+      ? `${API_URL}/conversations`
+      : `${API_URL}/conversations/${id}/messages`;
+
     try {
-      const response = await fetch(`${API_URL}/chat`, {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,15 +145,19 @@ function ChatPage({
       });
 
       if (response.status === 401) {
-        onSessionExpired(); // token missing or expired -> back to sign in
+        onSessionExpired();
         return;
       }
 
       if (response.ok) {
-        const data = await response.json();
-        addMessage(id, "ai", data.response);
+        const saved = await response.json();
+        setConversations((prev) => [saved, ...prev.filter((c) => c.id !== id && c.id !== saved.id)]);
+        setActiveId(saved.id);
       } else if (response.status === 422) {
         addMessage(id, "error", "That message couldn't be sent. Please try a shorter one.");
+      } else if (response.status === 429) {
+        const data = await response.json().catch(() => ({}));
+        addMessage(id, "error", data.detail || "Please wait a moment and try again.");
       } else {
         addMessage(id, "error", "Something went wrong. Please try again.");
       }
@@ -127,24 +193,31 @@ function ChatPage({
         />
 
         <div className="conversation-list">
-          {conversations.length === 0 ? (
+          {chatsLoading ? (
+            <p className="sidebar-empty">Loading chats...</p>
+          ) : conversations.length === 0 ? (
             <p className="sidebar-empty">No conversations yet.</p>
           ) : visible.length === 0 ? (
             <p className="sidebar-empty">No chats match your search.</p>
           ) : (
             visible.map((c) => (
-              <button
-                key={c.id}
-                className={`conversation-item ${c.id === activeId ? "active" : ""}`}
-                onClick={() => openConversation(c.id)}
-              >
-                {c.title}
-              </button>
+              <div key={c.id} className={`conversation-row ${c.id === activeId ? "active" : ""}`}>
+                <button className="conversation-item" onClick={() => openConversation(c.id)}>
+                  {c.title}
+                </button>
+                <button
+                  className="conversation-delete"
+                  aria-label={`Delete ${c.title}`}
+                  onClick={() => deleteConversation(c.id)}
+                >
+                  Delete
+                </button>
+              </div>
             ))
           )}
         </div>
 
-        <p className="sidebar-note">Chats are kept only while this page is open.</p>
+        <p className="sidebar-note">Chats are saved to your account. You can delete one at any time.</p>
         <button className="sidebar-link" onClick={() => onNavigate("profile")}>
           Settings &amp; Privacy
         </button>

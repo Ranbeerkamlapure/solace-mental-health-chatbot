@@ -32,6 +32,15 @@ class UserCreate(BaseModel):
         return normalize_email(value)
 
 
+class ProfileUpdate(BaseModel):
+    username: Username
+
+    @field_validator("username")
+    @classmethod
+    def collapse_whitespace(cls, value: str) -> str:
+        return re.sub(r"\s+", " ", value)
+
+
 class UserPublic(BaseModel):
     """Safe user representation. Must never contain password data."""
 

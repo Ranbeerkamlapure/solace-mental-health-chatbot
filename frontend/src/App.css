@@ -655,7 +655,24 @@ button:disabled {
   overflow-y: auto;
 }
 
+.conversation-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+}
+
+.conversation-row:hover {
+  background: var(--surface-2);
+}
+
+.conversation-row.active {
+  background: var(--accent-soft);
+}
+
 .conversation-item {
+  flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   border-radius: 8px;
   overflow: hidden;
@@ -664,16 +681,22 @@ button:disabled {
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
-.conversation-item:hover {
-  background: var(--surface-2);
+.conversation-row:hover .conversation-item,
+.conversation-row.active .conversation-item {
   color: var(--text);
 }
 
-.conversation-item.active {
-  background: var(--accent-soft);
+.conversation-delete {
+  flex: none;
+  padding: 6px 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.conversation-delete:hover {
   color: var(--text);
 }
 

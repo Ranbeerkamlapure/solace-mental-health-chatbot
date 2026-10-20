@@ -54,3 +54,14 @@ def authenticate_user(email: str, password: str) -> dict:
     users_collection.update_one({"_id": user["_id"]}, {"$set": {"last_login_at": now}})
     user["last_login_at"] = now
     return user
+
+
+def update_username(user_id, username: str) -> UserPublic:
+    now = utcnow()
+    users_collection.update_one(
+        {"_id": user_id},
+        {"$set": {"username": username, "updated_at": now}},
+    )
+    user = users_collection.find_one({"_id": user_id})
+    user["updated_at"] = now
+    return user_to_public(user)

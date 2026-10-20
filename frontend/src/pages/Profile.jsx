@@ -3,7 +3,10 @@ import { API_URL } from "../config.js";
 
 function ProfilePage({ token, theme, onToggleTheme, onSessionExpired }) {
   const [profile, setProfile] = useState(null); // { username, email, created_at }
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Ask the backend who is signed in: GET /auth/me (the same JWT as /chat)
   useEffect(() => {
@@ -19,7 +22,9 @@ function ProfilePage({ token, theme, onToggleTheme, onSessionExpired }) {
         if (res.status === 401) {
           onSessionExpired();
         } else if (res.ok) {
-          setProfile(await res.json());
+          const data = await res.json();
+          setProfile(data);
+          setName(data.username);
         } else {
           setError("Something went wrong. Please try again.");
         }
@@ -34,6 +39,44 @@ function ProfilePage({ token, theme, onToggleTheme, onSessionExpired }) {
     };
     // Runs once per token. (onSessionExpired is not listed on purpose, so it can't re-trigger the request.)
   }, [token]);
+
+  const trimmedName = name.trim().replace(/\s+/g, " ");
+  const nameChanged = profile && trimmedName !== profile.username;
+  const nameValid = trimmedName.length >= 2 && trimmedName.length <= 50;
+
+  async function saveName(event) {
+    event.preventDefault();
+    if (!nameChanged || !nameValid || saving) return;
+    setSaving(true);
+    setError("");
+    setSaved("");
+    try {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username: trimmedName }),
+      });
+      if (res.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+        setName(data.username);
+        setSaved("Name saved.");
+      } else {
+        setError("That name couldn’t be saved. Use 2 to 50 characters.");
+      }
+    } catch {
+      setError("Unable to connect to the server.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const memberSince = profile
     ? new Date(profile.created_at).toLocaleDateString(undefined, {
@@ -59,22 +102,36 @@ function ProfilePage({ token, theme, onToggleTheme, onSessionExpired }) {
         {profile && (
           <section className="panel">
             <h2 className="eyebrow">Account</h2>
-            <div className="field">
-              <label htmlFor="profile-name">Name</label>
-              <input id="profile-name" type="text" value={profile.username} readOnly />
-            </div>
-            <div className="field">
-              <label htmlFor="profile-email">Email</label>
-              <input id="profile-email" type="email" value={profile.email} readOnly />
-            </div>
-            <div className="field">
-              <span className="field-label">Member since</span>
-              <span className="field-value">{memberSince}</span>
-            </div>
-            <button className="btn btn-primary" disabled>
-              Save changes
-            </button>
-            <p className="hint">Editing your details isn’t available yet.</p>
+            <form onSubmit={saveName}>
+              <div className="field">
+                <label htmlFor="profile-name">Name</label>
+                <input
+                  id="profile-name"
+                  type="text"
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setSaved("");
+                  }}
+                  maxLength={50}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="profile-email">Email</label>
+                <input id="profile-email" type="email" value={profile.email} readOnly />
+              </div>
+              <div className="field">
+                <span className="field-label">Member since</span>
+                <span className="field-value">{memberSince}</span>
+              </div>
+              <button className="btn btn-primary" type="submit" disabled={!nameChanged || !nameValid || saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </button>
+              {saved && <p className="hint">{saved}</p>}
+              {nameChanged && !nameValid && (
+                <p className="hint">Use 2 to 50 characters.</p>
+              )}
+            </form>
           </section>
         )}
 
@@ -95,14 +152,14 @@ function ProfilePage({ token, theme, onToggleTheme, onSessionExpired }) {
           <h2 className="eyebrow">Privacy &amp; data</h2>
           <ul className="privacy-list">
             <li>
-              Solace’s server does not store your messages. Conversations stay in this browser tab
-              and disappear when you refresh or sign out.
+              Conversations are saved to your account and stay available after a refresh. You can
+              delete a conversation from the chat sidebar.
             </li>
             <li>Your name, email and a securely hashed password are stored so you can sign in.</li>
             <li>A sign-in token is kept in this browser until you sign out.</li>
             <li>
-              Replies come from Solace’s own keyword rules. Your messages are not sent to any
-              external AI service.
+              To write a reply, your message and a few earlier turns from this chat are also sent
+              to Groq (groq.com).
             </li>
           </ul>
         </section>

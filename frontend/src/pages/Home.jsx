@@ -18,7 +18,7 @@ const FEATURES = [
   },
   {
     title: "Simple by design",
-    text: "No black box. Solace uses carefully written response patterns: it looks for keywords in your message and picks a matching reply that was written in advance.",
+    text: "A language model reads the message you just sent and writes a short reply. If that service is unavailable, Solace uses a reply written in advance.",
   },
   {
     title: "Safe by design",
@@ -36,20 +36,12 @@ const STEPS = [
     text: "Solace looks for obvious crisis phrases before anything else. If one appears, it replies with a fixed message about emergency and crisis support.",
   },
   {
-    title: "Keywords are matched",
-    text: "Otherwise, it looks for keywords and phrases such as “stressed”, “exams” or “lonely”.",
+    title: "A reply is written for this message",
+    text: "Otherwise your message, and a few earlier turns from this chat, are sent to Groq so the reply can follow what you actually said.",
   },
   {
-    title: "A supportive reply is chosen",
-    text: "Each group of keywords has a response written in advance. The first matching group is used.",
-  },
-  {
-    title: "Or it simply listens",
-    text: "If nothing matches, Solace invites you to tell it a little more.",
-  },
-  {
-    title: "Solace replies",
-    text: "The reply appears in your conversation. No external AI service is involved.",
+    title: "A written reply is the backup",
+    text: "If Groq cannot answer, Solace matches keywords such as “stressed” or “lonely” and uses a reply written in advance.",
   },
 ];
 
@@ -107,7 +99,7 @@ function HomePage({ onNavigate }) {
               <span className="eyebrow">How Solace works</span>
               <h2 className="how-title">Simple on purpose.</h2>
               <p className="how-intro">
-                Solace is a rule-based chatbot, not a person or a clinician. This is exactly what
+                Solace is a supportive chatbot, not a person or a clinician. This is exactly what
                 happens when you send a message.
               </p>
               <ol className="steps">

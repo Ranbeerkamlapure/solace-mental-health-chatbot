@@ -1,6 +1,24 @@
 import { useState } from "react";
 import { API_URL } from "../config.js";
 
+const UNAVAILABLE = "The service is temporarily unavailable. Please try again in a moment.";
+
+// POST JSON with a time limit, so the page can never sit on "Please wait..." forever
+async function postJson(path, body) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    return await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // One component for both screens. mode is "login" or "register".
 function AuthPage({ mode, notice, onNavigate, onLogin }) {
   const isLogin = mode === "login";
@@ -30,6 +48,7 @@ function AuthPage({ mode, notice, onNavigate, onLogin }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (loading) return; // ignore a second submit while a request is running
     setError("");
 
     const problem = validate();
@@ -41,11 +60,7 @@ function AuthPage({ mode, notice, onNavigate, onLogin }) {
     setLoading(true);
     try {
       if (isLogin) {
-        const res = await fetch(`${API_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim(), password }),
-        });
+        const res = await postJson("/auth/login", { email: email.trim(), password });
 
         if (res.ok) {
           const data = await res.json();
@@ -54,15 +69,17 @@ function AuthPage({ mode, notice, onNavigate, onLogin }) {
           setError("Invalid email or password.");
         } else if (res.status === 422) {
           setError("Please enter a valid email and password.");
+        } else if (res.status === 503) {
+          setError(UNAVAILABLE);
         } else {
           setError("Something went wrong. Please try again.");
         }
       } else {
         // The backend field is called "username"; the form calls it "Your name"
-        const res = await fetch(`${API_URL}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: name.trim(), email: email.trim(), password }),
+        const res = await postJson("/auth/register", {
+          username: name.trim(),
+          email: email.trim(),
+          password,
         });
 
         if (res.status === 201) {
@@ -71,12 +88,18 @@ function AuthPage({ mode, notice, onNavigate, onLogin }) {
           setError("An account with this email already exists.");
         } else if (res.status === 422) {
           setError("Please check your details and try again.");
+        } else if (res.status === 503) {
+          setError(UNAVAILABLE);
         } else {
           setError("Something went wrong. Please try again.");
         }
       }
-    } catch {
-      setError("Unable to connect to the server.");
+    } catch (err) {
+      setError(
+        err.name === "AbortError"
+          ? "The server took too long to respond. Please try again."
+          : "Unable to connect to the server.",
+      );
     } finally {
       setLoading(false);
     }

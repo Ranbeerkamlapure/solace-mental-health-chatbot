@@ -1,5 +1,26 @@
-"""A simple rule-based chatbot. It only matches keywords. No AI, no external API."""
+"""Chat replies. Crisis phrases always get a fixed answer. Other messages go to Groq
+when GROQ_API_KEY is set, and fall back to keyword replies if that call fails."""
+import json
+import logging
 import re
+import urllib.error
+import urllib.request
+
+from core.config import GROQ_API_KEY, GROQ_MODEL
+
+logger = logging.getLogger("solace")
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+SYSTEM_PROMPT = (
+    "You are Solace, a calm, kind listener for students. "
+    "You are not a therapist, doctor, or crisis service, and you never diagnose. "
+    "Reply to the exact feeling in the latest message, in 2 to 4 short sentences, in plain language. "
+    "Do not cheer a sad or self-critical message. "
+    "Ask one gentle question when it fits. "
+    "If the person may be in immediate danger or talking about suicide or self-harm, "
+    "say you cannot help in a crisis and tell them to contact local emergency services "
+    "(112 in India, 911 in the US) or Tele-MANAS at 14416."
+)
 
 # 1) CRISIS PHRASES: checked first. If any of these appear, we always return
 #    CRISIS_RESPONSE. (Written in lowercase, without apostrophes.)
@@ -183,19 +204,79 @@ def contains(text, keyword):
     return " " + keyword + " " in text
 
 
-def get_chat_reply(message):
+def keyword_reply(message):
+    """First matching keyword group, or the generic fallback."""
     text = clean_text(message)
-
-    # Step 1: crisis check
-    for phrase in CRISIS_PHRASES:
-        if contains(text, phrase):
-            return CRISIS_RESPONSE
-
-    # Step 2: first matching keyword group wins
     for keywords, response in RESPONSES:
         for keyword in keywords:
             if contains(text, keyword):
                 return response
-
-    # Step 3: nothing matched
     return FALLBACK_RESPONSE
+
+
+def _clean_reply(text):
+    text = text.replace("\u00a0", " ").replace("\u202f", " ").replace("\u2009", " ")
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r" *\n *", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return text[:2000]
+
+
+def groq_reply(message, history):
+    """Ask Groq for a reply. Returns None when the key is missing or the call fails."""
+    if not GROQ_API_KEY:
+        return None
+
+    turns = []
+    for turn in history[-8:]:
+        role = turn.get("role")
+        content = str(turn.get("content") or "").strip()
+        if role in ("user", "assistant") and content:
+            turns.append({"role": role, "content": content[:1000]})
+    if turns and turns[-1]["role"] == "user" and turns[-1]["content"] == message.strip():
+        turns.pop()
+
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [{"role": "system", "content": SYSTEM_PROMPT}, *turns, {"role": "user", "content": message.strip()[:1000]}],
+        "temperature": 0.6,
+        "max_tokens": 400,
+    }
+    # Cloudflare rejects urllib's default User-Agent with HTTP 403.
+    request = urllib.request.Request(
+        GROQ_URL,
+        data=json.dumps(payload).encode(),
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "solace-backend/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            data = json.loads(response.read().decode())
+        text = _clean_reply(data["choices"][0]["message"].get("content") or "")
+        return text or None
+    except urllib.error.HTTPError as exc:
+        logger.warning("Groq reply failed: HTTP %s", exc.code)
+        return None
+    except Exception as exc:
+        logger.warning("Groq reply failed: %s", type(exc).__name__)
+        return None
+
+
+def get_chat_reply(message, history=None):
+    text = clean_text(message)
+
+    # Step 1: crisis check. This stays fixed and is not sent to Groq.
+    for phrase in CRISIS_PHRASES:
+        if contains(text, phrase):
+            return CRISIS_RESPONSE
+
+    # Step 2: language model, with the keyword list as backup.
+    reply = groq_reply(message, history or [])
+    if reply:
+        return reply
+    return keyword_reply(message)
