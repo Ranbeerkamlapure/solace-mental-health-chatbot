@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from core.deps import get_current_user
 from core.rate_limit import RateLimitError, check_chat_rate_limit
 from schemas.chat import ConversationPublic, MessageIn
+from services.chat_service import ChatServiceUnavailable
 from services.conversation_service import (
     ConversationNotFound,
     add_message,
@@ -29,7 +30,12 @@ def list_mine(current_user: dict = Depends(get_current_user)):
 @router.post("", response_model=ConversationPublic, status_code=status.HTTP_201_CREATED)
 def create(body: MessageIn, current_user: dict = Depends(get_current_user)):
     _limit(current_user)
-    return start_conversation(current_user["_id"], body.message)
+    try:
+        return start_conversation(current_user["_id"], body.message)
+    except ChatServiceUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=exc.detail
+        ) from None
 
 
 @router.post("/{conversation_id}/messages", response_model=ConversationPublic)
@@ -39,6 +45,10 @@ def send(conversation_id: str, body: MessageIn, current_user: dict = Depends(get
         return add_message(current_user["_id"], conversation_id, body.message)
     except ConversationNotFound:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found") from None
+    except ChatServiceUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=exc.detail
+        ) from None
 
 
 @router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)

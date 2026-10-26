@@ -6,6 +6,7 @@ from unittest import mock
 
 os.environ.setdefault("MONGODB_URI", "mongodb://user:secret-pw@example.invalid:27017/")
 os.environ.setdefault("JWT_SECRET", "x" * 40)
+os.environ.setdefault("GROQ_API_KEY", "test-groq-key-not-real")
 
 import database  # noqa: E402
 from pymongo.errors import PyMongoError  # noqa: E402

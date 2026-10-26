@@ -51,6 +51,6 @@ CORS_ORIGINS: list[str] = [
     if origin.strip()
 ]
 
-# Optional. When set, chat replies come from Groq. Crisis phrases still use the fixed reply.
-GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
+# Required. Ordinary chat replies come from Groq. Crisis phrases still use the fixed reply.
+GROQ_API_KEY: str = _require("GROQ_API_KEY")
 GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b").strip() or "openai/gpt-oss-120b"

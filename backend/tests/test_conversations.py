@@ -7,6 +7,7 @@ from bson import ObjectId
 
 os.environ.setdefault("MONGODB_URI", "mongodb://user:secret-pw@example.invalid:27017/")
 os.environ.setdefault("JWT_SECRET", "x" * 40)
+os.environ.setdefault("GROQ_API_KEY", "test-groq-key-not-real")
 
 from services.conversation_service import (  # noqa: E402
     ConversationNotFound,

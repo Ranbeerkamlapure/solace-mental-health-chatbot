@@ -18,7 +18,7 @@ const FEATURES = [
   },
   {
     title: "Simple by design",
-    text: "A language model reads the message you just sent and writes a short reply. If that service is unavailable, Solace uses a reply written in advance.",
+    text: "A language model reads the message you just sent and writes a short reply. If that service is unavailable, Solace shows an error instead of inventing a reply.",
   },
   {
     title: "Safe by design",
@@ -37,11 +37,7 @@ const STEPS = [
   },
   {
     title: "A reply is written for this message",
-    text: "Otherwise your message, and a few earlier turns from this chat, are sent to Groq so the reply can follow what you actually said.",
-  },
-  {
-    title: "A written reply is the backup",
-    text: "If Groq cannot answer, Solace matches keywords such as “stressed” or “lonely” and uses a reply written in advance.",
+    text: "Otherwise your message, and a few earlier turns from this chat, are sent to Groq so the reply can follow what you actually said. If that service is down, you see an error instead of a made-up reply.",
   },
 ];
 

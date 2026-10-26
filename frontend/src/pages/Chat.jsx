@@ -158,6 +158,13 @@ function ChatPage({
       } else if (response.status === 429) {
         const data = await response.json().catch(() => ({}));
         addMessage(id, "error", data.detail || "Please wait a moment and try again.");
+      } else if (response.status === 503) {
+        const data = await response.json().catch(() => ({}));
+        addMessage(
+          id,
+          "error",
+          data.detail || "Chat replies are temporarily unavailable. Please try again in a moment.",
+        );
       } else {
         addMessage(id, "error", "Something went wrong. Please try again.");
       }

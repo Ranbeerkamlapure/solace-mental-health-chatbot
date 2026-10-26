@@ -8,10 +8,12 @@
 
 # Python
 .venv/
+.venv-*/
 venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+*.egg-info/
 
 # Node and build output
 node_modules/
@@ -22,7 +24,6 @@ dist/
 *.log
 .DS_Store
 .vscode/
-
 
 # Backup archives
 *.zip

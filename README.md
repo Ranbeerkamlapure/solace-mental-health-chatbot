@@ -2,7 +2,7 @@
 
 **A calm, accessible web application for supportive conversations and reflection.**
 
-Solace is a full-stack student project designed to provide a simple space where users can express their feelings and receive supportive replies. A language model on Groq writes those replies. A fixed crisis reply is used for selected high-risk phrases, and a written keyword reply is used only if Groq cannot answer. The app combines a responsive React interface with a FastAPI backend and MongoDB for accounts and saved chats.
+Solace is a full-stack student project designed to provide a simple space where users can express their feelings and receive supportive replies. A language model on Groq writes those replies. A fixed crisis reply is used for selected high-risk phrases. If Groq is unavailable, the API returns an error instead of a substitute reply. The app combines a responsive React interface with a FastAPI backend and MongoDB for accounts and saved chats.
 
 > **Important:** Solace is an educational support project, not a medical or mental-health professional service. It does not diagnose conditions, prescribe treatment, or replace professional care or emergency services.
 
@@ -59,9 +59,7 @@ FastAPI Backend
       |
       +--> Crisis phrase check (fixed helpline reply)
       |
-      +--> Groq, for other replies
-      |
-      +--> Written keyword reply, only if Groq fails
+      +--> Groq, for other replies (error if unavailable)
       |
       +--> MongoDB Atlas
              |
@@ -123,6 +121,7 @@ mental-health-chatbot/
 - Python and pip
 - Node.js and npm
 - A MongoDB Atlas cluster or another compatible MongoDB deployment
+- A free Groq API key from https://console.groq.com
 - Git
 
 ### 1. Clone the repository
@@ -222,7 +221,7 @@ For local development, ensure the backend's `CORS_ORIGINS` includes the frontend
 | `JWT_ALGORITHM`               | JWT signing algorithm                              |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration duration                          |
 | `CORS_ORIGINS`                | Comma-separated list of permitted frontend origins |
-| `GROQ_API_KEY`                | Free Groq API key used to write chat replies       |
+| `GROQ_API_KEY`                | Required. Free Groq API key used to write chat replies |
 | `GROQ_MODEL`                  | Groq model id, default `openai/gpt-oss-120b`       |
 | `VITE_API_URL`                | Backend URL used by the Vite frontend              |
 
@@ -241,7 +240,7 @@ Crisis checks look for selected phrases and cannot guarantee detection of every 
 
 ## ⚠️ Current Limitations
 
-- Replies come from Groq when `GROQ_API_KEY` is set. If that call fails, a keyword reply is used instead.
+- Ordinary replies require a working Groq API key. If that call fails, the API returns a service-unavailable error and the chat UI shows a helpful message.
 - Crisis handling is a fixed reply for selected phrases, not a clinical assessment.
 - Chat sending is limited to one message every 2 seconds and 100 messages per user per day, in the running server process.
 - The profile page can change the display name. Email cannot be changed.

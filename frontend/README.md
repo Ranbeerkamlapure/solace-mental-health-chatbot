@@ -1,16 +1,28 @@
-# React + Vite
+# Solace frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + Vite UI for the Solace mental-health support chatbot.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From this directory:
 
-## React Compiler
+```bash
+npm install
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Create `.env.local` with the backend URL:
 
-## Expanding the Oxlint configuration
+```env
+VITE_API_URL=http://127.0.0.1:8000
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Commands
+
+```bash
+npm run dev      # local development server
+npm run build    # production build
+npm run lint     # Oxlint
+npm run preview  # preview the production build
+```
+
+For backend setup, environment variables, and project overview, see the [root README](../README.md).

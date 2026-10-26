@@ -6,7 +6,7 @@ const PAGES = {
     title: "About Solace",
     intro: "Solace is a student project: a small, calm place to put your thoughts into words.",
     sections: [
-      ["What it is", "A chatbot built with React, FastAPI and MongoDB. Replies are written by Groq, a language-model service. A few fixed replies remain for crisis phrases and for when Groq is unavailable."],
+      ["What it is", "A chatbot built with React, FastAPI and MongoDB. Replies are written by Groq, a language-model service. Selected crisis phrases get a fixed helpline reply. If Groq is unavailable, Solace shows an error rather than a fake reply."],
       ["What it is not", "Solace is not a person, a therapist or a doctor. The model can miss things or misread a message."],
       ["Why it exists", "To practise building a simple, understandable and kind tool for students, and to keep every part of it explainable."],
     ],

@@ -14,7 +14,7 @@ from core.rate_limit import RateLimitError, check_chat_rate_limit
 from database import describe_db_error, ensure_indexes
 from routes.auth import router as auth_router
 from routes.conversations import router as conversations_router
-from services.chat_service import get_chat_reply
+from services.chat_service import ChatServiceUnavailable, get_chat_reply
 
 logger = logging.getLogger("solace")
 
@@ -69,4 +69,7 @@ def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
     except RateLimitError as exc:
         raise HTTPException(status_code=429, detail=exc.detail) from None
     history = [turn.model_dump() for turn in request.history]
-    return {"response": get_chat_reply(request.message, history)}
+    try:
+        return {"response": get_chat_reply(request.message, history)}
+    except ChatServiceUnavailable as exc:
+        raise HTTPException(status_code=503, detail=exc.detail) from None
